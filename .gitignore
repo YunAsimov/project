@@ -2,8 +2,14 @@
 *.key
 *.pem
 keystore/
+client_store/
+*keystore*.json
 *.db
 *.sqlite3
+
+# Test / demo artifacts
+.playwright-mcp/
+*.png
 
 # Python
 __pycache__/

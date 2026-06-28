@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>端到端加密聊天</title>
+<style>
+  :root{
+    --canvas:#ffffff; --subtle:#f6f8fa; --inset:#eef1f4;
+    --border:#d0d7de; --border-muted:#d8dee4;
+    --fg:#1f2328; --muted:#656d76; --faint:#8c959f;
+    --accent:#0969da; --accent-sub:#ddf4ff; --accent-bd:#54aeff;
+    --success:#1f883d; --success-h:#1a7f37; --danger:#cf222e;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,"PingFang SC","Microsoft YaHei",sans-serif;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --shadow:0 1px 0 rgba(31,35,40,.04),0 3px 6px rgba(140,149,159,.15);
+    --radius:6px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--subtle);color:var(--fg);font-family:var(--sans);
+    font-size:14px;line-height:1.5;display:flex;align-items:center;justify-content:center;
+    overflow:hidden}
+  .hidden{display:none!important}
+  button{font-family:var(--sans);cursor:pointer}
+  input{font-family:var(--sans)}
+  a{color:var(--accent);text-decoration:none}
+
+  /* primary / default github buttons */
+  .btn{border:1px solid rgba(31,35,40,.15);border-radius:var(--radius);font-size:14px;
+    font-weight:500;padding:8px 16px;transition:.1s}
+  .btn-primary{background:var(--success);color:#fff;border-color:rgba(31,35,40,.15)}
+  .btn-primary:hover{background:var(--success-h)}
+  .btn-default{background:var(--canvas);color:var(--fg);border-color:var(--border)}
+  .btn-default:hover{background:var(--subtle);border-color:var(--faint)}
+
+  /* ---------- auth ---------- */
+  .auth{width:min(352px,92vw);background:var(--canvas);border:1px solid var(--border);
+    border-radius:var(--radius);padding:24px;box-shadow:var(--shadow)}
+  .auth h1{font-size:22px;font-weight:600;margin:0 0 4px;text-align:center}
+  .auth .sub{color:var(--muted);font-size:13px;margin:0 0 20px;text-align:center}
+  .tabs{display:flex;border:1px solid var(--border);border-radius:var(--radius);
+    overflow:hidden;margin-bottom:18px}
+  .tabs button{flex:1;border:0;background:var(--canvas);color:var(--muted);font-size:14px;
+    font-weight:500;padding:8px;border-right:1px solid var(--border)}
+  .tabs button:last-child{border-right:0}
+  .tabs button.on{background:var(--subtle);color:var(--fg)}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+  .field input{width:100%;background:var(--canvas);border:1px solid var(--border);
+    border-radius:var(--radius);color:var(--fg);font-size:14px;padding:8px 12px;outline:none;
+    transition:.1s}
+  .field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(9,105,218,.25)}
+  .auth .btn-primary{width:100%;margin-top:4px}
+  .hint{margin-top:14px;font-size:12px;color:var(--faint);line-height:1.6;
+    border-top:1px solid var(--border-muted);padding-top:12px}
+
+  /* ---------- chat ---------- */
+  .app{width:min(980px,96vw);height:min(660px,92vh);display:grid;
+    grid-template-columns:260px 1fr;background:var(--canvas);border:1px solid var(--border);
+    border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+  .side{background:var(--subtle);border-right:1px solid var(--border);display:flex;
+    flex-direction:column}
+  .me{padding:16px;border-bottom:1px solid var(--border)}
+  .me .nm{font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px}
+  .me .dot{width:8px;height:8px;border-radius:50%;background:var(--success)}
+  .me .fp{margin-top:8px;font-family:var(--mono);font-size:10.5px;color:var(--muted);
+    word-break:break-all;line-height:1.5}
+  .me .fp b{color:var(--fg);font-weight:600}
+  .newchat{padding:14px 14px 8px}
+  .newchat label{font-size:12px;font-weight:600;color:var(--muted);display:block;margin-bottom:7px}
+  .newchat .ic{display:flex;gap:6px}
+  .newchat input{flex:1;min-width:0;background:var(--canvas);border:1px solid var(--border);
+    border-radius:var(--radius);color:var(--fg);padding:6px 10px;font-size:13px;outline:none}
+  .newchat input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(9,105,218,.2)}
+  .newchat .add{border:1px solid rgba(31,35,40,.15);background:var(--success);color:#fff;
+    font-weight:600;font-size:16px;width:34px;border-radius:var(--radius);line-height:1}
+  .newchat .add:hover{background:var(--success-h)}
+  .peers{flex:1;overflow:auto;padding:8px}
+  .peers .h{font-size:11px;font-weight:600;color:var(--faint);padding:8px 8px 6px;
+    text-transform:uppercase;letter-spacing:.5px}
+  .peer{display:flex;align-items:center;gap:10px;padding:8px;border-radius:var(--radius);
+    cursor:pointer}
+  .peer:hover{background:var(--inset)}
+  .peer.on{background:var(--accent-sub)}
+  .peer .av{width:28px;height:28px;border-radius:50%;background:var(--border);display:grid;
+    place-items:center;font-weight:600;font-size:13px;color:var(--fg)}
+  .peer.on .av{background:var(--accent);color:#fff}
+  .peer .pn{font-size:14px}
+  .empty{color:var(--faint);font-size:13px;padding:8px}
+
+  .main{display:flex;flex-direction:column;min-width:0}
+  .top{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;
+    border-bottom:1px solid var(--border)}
+  .top .t{font-size:15px;font-weight:600}
+  .top .t small{display:block;font-weight:400;font-size:12px;color:var(--muted);margin-top:1px}
+  .stream{flex:1;overflow:auto;padding:18px;display:flex;flex-direction:column;gap:8px;
+    background:var(--subtle)}
+  .welcome{margin:auto;text-align:center;color:var(--faint);max-width:300px}
+  .welcome .lock{font-size:30px}
+  .welcome p{font-size:13px;margin-top:8px}
+  .bubble{max-width:74%;padding:8px 12px;border-radius:12px;font-size:14px;line-height:1.45;
+    word-wrap:break-word;border:1px solid var(--border)}
+  .bubble.in{align-self:flex-start;background:var(--canvas);border-bottom-left-radius:3px}
+  .bubble.out{align-self:flex-end;background:var(--accent-sub);border-color:var(--accent-bd);
+    border-bottom-right-radius:3px}
+  .composer{display:flex;gap:8px;padding:14px 18px;border-top:1px solid var(--border);
+    background:var(--canvas)}
+  .composer input{flex:1;background:var(--canvas);border:1px solid var(--border);
+    border-radius:var(--radius);color:var(--fg);font-size:14px;padding:9px 12px;outline:none}
+  .composer input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(9,105,218,.2)}
+  .composer input:disabled{background:var(--subtle);opacity:.7}
+  .composer .send:disabled{opacity:.5;cursor:not-allowed}
+
+  .log{height:90px;overflow:auto;border-top:1px solid var(--border);background:var(--canvas);
+    padding:8px 18px;font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.7}
+  .log .e{color:var(--danger)}
+  .log .k{color:var(--success)}
+
+  .toast{position:fixed;top:18px;left:50%;transform:translateX(-50%);background:var(--canvas);
+    border:1px solid var(--border);color:var(--fg);padding:9px 16px;border-radius:var(--radius);
+    font-size:13px;box-shadow:var(--shadow);z-index:9;transition:.2s;opacity:0}
+  .toast.show{opacity:1}
+  .toast.err{border-color:var(--danger);color:var(--danger)}
+
+  .df{position:fixed;right:12px;bottom:10px;font-size:11px;color:var(--faint);opacity:.8}
+  .df:hover{color:var(--accent)}
+</style>
+</head>
+<body>
+
+<!-- ============ 登录 / 注册 ============ -->
+<section class="auth" id="auth">
+  <h1>端到端加密聊天</h1>
+  <p class="sub">消息在本地加密，服务器只能看到密文。</p>
+  <div class="tabs">
+    <button id="tabReg" class="on" type="button">注册</button>
+    <button id="tabLogin" type="button">登录</button>
+  </div>
+  <div class="field">
+    <label for="user">用户名</label>
+    <input id="user" autocomplete="username" placeholder="请输入用户名" spellcheck="false"/>
+  </div>
+  <div class="field">
+    <label for="pass">密码</label>
+    <input id="pass" type="password" autocomplete="current-password" placeholder="请输入密码"/>
+  </div>
+  <button class="btn btn-primary" id="go" type="button">注册并进入</button>
+  <p class="hint">注册会在数据库中保存你的账号（密码经 scrypt 加盐哈希存储），并在本机生成长期身份密钥。</p>
+</section>
+
+<!-- ============ 聊天 ============ -->
+<section class="app hidden" id="app">
+  <aside class="side">
+    <div class="me">
+      <div class="nm"><span class="dot"></span><span id="meName">—</span></div>
+      <div class="fp" id="meFp"></div>
+    </div>
+    <div class="newchat">
+      <label>发起新会话</label>
+      <div class="ic">
+        <input id="peerInput" placeholder="对方用户名" autocomplete="off" spellcheck="false"/>
+        <button class="add" id="peerAdd" type="button" aria-label="发起会话">+</button>
+      </div>
+    </div>
+    <div class="peers">
+      <div class="h">会话</div>
+      <div id="peerList"><div class="empty">还没有会话</div></div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="top">
+      <div class="t" id="chatTitle">选择一个会话<small id="chatSub">端到端加密</small></div>
+      <button class="btn btn-default" id="verifyBtn" type="button">安全号校验</button>
+    </div>
+    <div class="stream" id="stream">
+      <div class="welcome" id="welcome">
+        <div class="lock">🔒</div>
+        <p>在左侧输入对方用户名发起加密会话。握手成功后即可收发消息。</p>
+      </div>
+    </div>
+    <div class="composer">
+      <input id="msgInput" placeholder="输入消息…" disabled autocomplete="off"/>
+      <button class="btn btn-primary send" id="sendBtn" type="button" disabled>发送</button>
+    </div>
+    <div class="log" id="log"></div>
+  </div>
+</section>
+
+<div class="toast" id="toast"></div>
+<a class="df" href="https://deerflow.tech" target="_blank" rel="noopener">由 Deerflow 构建</a>
+
+<script>
+const BRIDGE_URL = `ws://${location.hostname || '127.0.0.1'}:8766`;
+const $ = id => document.getElementById(id);
+
+let ws=null, mode='register', me=null, active=null;
+const sessions=new Set();
+const threads={};
+
+// ---------- 登录界面 ----------
+$('tabReg').onclick = ()=>setMode('register');
+$('tabLogin').onclick = ()=>setMode('login');
+function setMode(m){
+  mode=m;
+  $('tabReg').classList.toggle('on',m==='register');
+  $('tabLogin').classList.toggle('on',m==='login');
+  $('go').textContent = m==='register' ? '注册并进入' : '登录';
+  $('pass').setAttribute('autocomplete', m==='register'?'new-password':'current-password');
+}
+$('user').addEventListener('keydown',e=>{ if(e.key==='Enter') $('pass').focus(); });
+$('pass').addEventListener('keydown',e=>{ if(e.key==='Enter') $('go').click(); });
+$('go').onclick = ()=>{
+  const username=$('user').value.trim(), password=$('pass').value;
+  if(!username){ toast('请输入用户名',true); return; }
+  if(!password){ toast('请输入密码',true); return; }
+  connect(()=> send({action:mode, username, password}));
+};
+
+// ---------- websocket ----------
+function connect(onopen){
+  if(ws && ws.readyState===WebSocket.OPEN){ onopen&&onopen(); return; }
+  ws=new WebSocket(BRIDGE_URL);
+  ws.onopen=()=>onopen&&onopen();
+  ws.onmessage=e=>handle(JSON.parse(e.data));
+  ws.onerror=()=>toast('无法连接桥接，请先运行 python -m web.bridge',true);
+  ws.onclose=()=>{ if(me) logline('与桥接的连接已断开','e'); };
+}
+function send(o){ ws.send(JSON.stringify(o)); }
+
+// ---------- 事件处理 ----------
+function handle(ev){
+  switch(ev.event){
+    case 'ready': enterChat(ev.username, ev.fingerprint); break;
+    case 'session': addSession(ev.peer); logline(`✓ 与 ${ev.peer} 建立加密会话`,'k'); break;
+    case 'message': onMessage(ev.peer, ev.dir, ev.text); break;
+    case 'safety': onSafety(ev.peer, ev.number); break;
+    case 'info': logline(ev.text); break;
+    case 'error': toast(ev.message,true); logline(ev.message,'e'); break;
+  }
+}
+
+// ---------- 聊天界面 ----------
+function enterChat(username, fp){
+  me=username;
+  $('auth').classList.add('hidden');
+  $('app').classList.remove('hidden');
+  $('meName').textContent=username;
+  $('meFp').innerHTML=`<b>指纹</b> ${fp}`;
+  logline(`已登录为 ${username}`,'k');
+}
+$('peerAdd').onclick=startChat;
+$('peerInput').addEventListener('keydown',e=>{ if(e.key==='Enter') startChat(); });
+function startChat(){
+  const peer=$('peerInput').value.trim();
+  if(!peer) return;
+  if(peer===me){ toast('不能和自己聊天',true); return; }
+  send({action:'chat', peer});
+  $('peerInput').value='';
+}
+function addSession(peer){
+  if(!sessions.has(peer)){ sessions.add(peer); threads[peer]=threads[peer]||[]; renderPeers(); }
+  if(!active) selectPeer(peer);
+}
+function renderPeers(){
+  const box=$('peerList');
+  if(sessions.size===0){ box.innerHTML='<div class="empty">还没有会话</div>'; return; }
+  box.innerHTML='';
+  [...sessions].forEach(p=>{
+    const el=document.createElement('div');
+    el.className='peer'+(p===active?' on':'');
+    el.innerHTML=`<div class="av">${esc(p[0].toUpperCase())}</div><div class="pn">${esc(p)}</div>`;
+    el.onclick=()=>selectPeer(p);
+    box.appendChild(el);
+  });
+}
+function selectPeer(peer){
+  active=peer;
+  renderPeers();
+  $('chatTitle').firstChild.textContent=peer;
+  $('msgInput').disabled=false; $('sendBtn').disabled=false;
+  $('msgInput').focus();
+  renderThread();
+}
+function renderThread(){
+  const s=$('stream');
+  const msgs=threads[active]||[];
+  if(msgs.length===0){
+    s.innerHTML='<div class="welcome"><div class="lock">🔒</div><p>会话已加密，发送第一条消息吧。</p></div>';
+    return;
+  }
+  s.innerHTML='';
+  msgs.forEach(m=>{
+    const b=document.createElement('div');
+    b.className='bubble '+m.dir;
+    b.textContent=m.text;
+    s.appendChild(b);
+  });
+  s.scrollTop=s.scrollHeight;
+}
+function onMessage(peer,dir,text){
+  threads[peer]=threads[peer]||[];
+  threads[peer].push({dir,text});
+  if(!sessions.has(peer)){ sessions.add(peer); renderPeers(); }
+  if(peer===active) renderThread(); else renderPeers();
+}
+function onSafety(peer,number){
+  logline(`安全号（与 ${peer}）：${number}`,'k');
+  logline('双方当面核对，一致即说明没有中间人（B2）。');
+}
+
+// 发送
+$('msgInput').addEventListener('keydown',e=>{ if(e.key==='Enter') sendMsg(); });
+$('sendBtn').onclick=sendMsg;
+function sendMsg(){
+  const text=$('msgInput').value;
+  if(!text.trim()||!active) return;
+  send({action:'send', peer:active, text});
+  $('msgInput').value='';
+}
+$('verifyBtn').onclick=()=>{ if(active) send({action:'verify', peer:active}); };
+
+// ---------- 辅助 ----------
+function logline(text,cls){
+  const l=$('log');
+  const d=document.createElement('div');
+  if(cls) d.className=cls;
+  d.textContent=text;
+  l.appendChild(d); l.scrollTop=l.scrollHeight;
+}
+let toastT;
+function toast(msg,err){
+  const t=$('toast');
+  t.textContent=msg; t.className='toast show'+(err?' err':'');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.className='toast',2600);
+}
+function esc(s){ return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+</script>
+</body>
+</html>

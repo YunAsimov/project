@@ -48,6 +48,24 @@ Example: in Alice's terminal type `/chat bob`, wait for
 `session established with bob`, then type a message. It appears in Bob's
 terminal as `alice> ...`.
 
+## Web UI (optional)
+
+A browser front end is provided under `web/`. It is a **thin UI only** — all
+cryptography runs in a local Python bridge that reuses the exact same client
+code (`client.cli.ClientApp`), so the browser holds no keys and the end-to-end
+guarantees are unchanged. The browser↔bridge link is loopback, inside the
+endpoint's own machine.
+
+```bash
+python -m server.app          # 1. relay server (port 8765)
+python -m web.bridge          # 2. bridge: serves the UI + browser API
+# 3. open http://127.0.0.1:8000 in two tabs, register/login as two users,
+#    enter the peer's name to start a chat, then send messages.
+```
+
+The UI supports user registration, login, and sending messages, plus a
+"safety number" check (B2) — matching numbers on both ends confirm no MitM.
+
 ## Test
 
 ```bash

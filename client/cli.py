@@ -46,6 +46,10 @@ class ClientApp:
         self.active_peer: str | None = None
         self._tasks: set[asyncio.Task] = set()
 
+    def _log(self, text: str) -> None:
+        """User-facing feedback. Overridable so a GUI/bridge can intercept it."""
+        print(text)
+
     # --- server interactions ------------------------------------------------
 
     async def register(self) -> None:
@@ -63,27 +67,27 @@ class ClientApp:
     async def start_chat_with(self, peer: str) -> None:
         peer_key = await self._get_peer_key(peer)
         if peer_key is None:
-            print(f"[!] unknown user: {peer}")
+            self._log(f"[!] unknown user: {peer}")
             return
         hs_init, pending = handshake.initiate(
             self.id.private_key, self.id.username, peer, peer_key)
         self.pending[pending.session_id] = pending
         await self.transport.send(hs_init)
-        print(f"[*] handshake initiated with {peer} ...")
+        self._log(f"[*] handshake initiated with {peer} ...")
 
     def show_safety_number(self, peer: str) -> None:
         peer_key = self.peer_keys.get(peer)
         if peer_key is None:
-            print(f"[!] no key cached for {peer}; run /chat {peer} first")
+            self._log(f"[!] no key cached for {peer}; run /chat {peer} first")
             return
         number = fingerprint.safety_number(self.id.public_bytes, peer_key)
-        print(f"[safety number with {peer}] {number}")
-        print("    Compare this out of band; matching numbers => no MitM (B2).")
+        self._log(f"[safety number with {peer}] {number}")
+        self._log("    Compare this out of band; matching numbers => no MitM (B2).")
 
     async def send_text(self, peer: str, text: str) -> None:
         session = self.sessions.get(peer)
         if session is None:
-            print(f"[!] no session with {peer}; run /chat {peer} first")
+            self._log(f"[!] no session with {peer}; run /chat {peer} first")
             return
         await self.transport.send(messaging.encrypt_message(session, text.encode()))
 
@@ -104,7 +108,7 @@ class ClientApp:
         elif mtype == MSG_DATA:
             self._on_data(msg)
         elif mtype == MSG_ERROR:
-            print(f"[server] {msg['reason']}")
+            self._log(f"[server] {msg['reason']}")
 
     def _on_lookup_result(self, msg: dict) -> None:
         peer = msg["username"]
@@ -119,45 +123,45 @@ class ClientApp:
         peer = msg["from"]
         peer_key = await self._get_peer_key(peer)
         if peer_key is None:
-            print(f"[!] cannot verify handshake from unknown user {peer}")
+            self._log(f"[!] cannot verify handshake from unknown user {peer}")
             return
         try:
             hs_resp, session = handshake.respond(
                 self.id.private_key, self.id.username, peer_key, msg)
         except handshake.HandshakeError as exc:
-            print(f"[!] rejected handshake from {peer}: {exc}")
+            self._log(f"[!] rejected handshake from {peer}: {exc}")
             return
         self.sessions[peer] = session
         self.active_peer = peer
         await self.transport.send(hs_resp)
-        print(f"[*] session established with {peer} (they started it)")
+        self._log(f"[*] session established with {peer} (they started it)")
 
     def _on_hs_resp(self, msg: dict) -> None:
         pending = self.pending.pop(msg.get("session_id"), None)
         if pending is None:
-            print("[!] unexpected handshake response")
+            self._log("[!] unexpected handshake response")
             return
         try:
             session = handshake.complete(pending, msg)
         except handshake.HandshakeError as exc:
-            print(f"[!] handshake failed: {exc}")
+            self._log(f"[!] handshake failed: {exc}")
             return
         self.sessions[pending.remote_name] = session
         self.active_peer = pending.remote_name
-        print(f"[*] session established with {pending.remote_name}")
+        self._log(f"[*] session established with {pending.remote_name}")
 
     def _on_data(self, msg: dict) -> None:
         peer = msg["from"]
         session = self.sessions.get(peer)
         if session is None:
-            print(f"[!] data from {peer} with no session; dropped")
+            self._log(f"[!] data from {peer} with no session; dropped")
             return
         try:
             plaintext = messaging.decrypt_message(session, msg)
         except messaging.MessageError as exc:
-            print(f"[!] rejected message from {peer}: {exc}")
+            self._log(f"[!] rejected message from {peer}: {exc}")
             return
-        print(f"\n{peer}> {plaintext.decode(errors='replace')}")
+        self._log(f"\n{peer}> {plaintext.decode(errors='replace')}")
 
     # --- loops --------------------------------------------------------------
 
