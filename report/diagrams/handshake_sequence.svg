@@ -1,0 +1,59 @@
+<svg width="100%" viewBox="0 0 680 560" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Microsoft YaHei, sans-serif">
+<title>认证握手与消息流时序图</title>
+<desc>Alice、服务器、Bob 三方时序：注册、查询公钥、签名握手 hs_init/hs_resp、派生会话密钥、AEAD 加密消息往返。</desc>
+
+<text x="40" y="32" font-size="18" font-weight="700" fill="#1e293b">认证握手与消息流时序</text>
+
+<defs>
+<marker id="a2" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#2563eb"/></marker>
+<marker id="a3" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#059669"/></marker>
+</defs>
+
+<rect x="50" y="50" width="120" height="36" rx="6" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+<text x="110" y="73" font-size="14" font-weight="700" fill="#1e3a5f" text-anchor="middle">Alice</text>
+<rect x="285" y="50" width="120" height="36" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+<text x="345" y="73" font-size="14" font-weight="700" fill="#78350f" text-anchor="middle">服务器</text>
+<rect x="520" y="50" width="120" height="36" rx="6" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+<text x="580" y="73" font-size="14" font-weight="700" fill="#1e3a5f" text-anchor="middle">Bob</text>
+
+<line x1="110" y1="86" x2="110" y2="525" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 4"/>
+<line x1="345" y1="86" x2="345" y2="525" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 4"/>
+<line x1="580" y1="86" x2="580" y2="525" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 4"/>
+
+<line x1="110" y1="115" x2="343" y2="115" stroke="#475569" stroke-width="2" marker-end="url(#a2)"/>
+<text x="115" y="109" font-size="11" fill="#334155">① register(Alice, 身份公钥)</text>
+<line x1="580" y1="140" x2="347" y2="140" stroke="#475569" stroke-width="2" marker-end="url(#a2)"/>
+<text x="575" y="134" font-size="11" fill="#334155" text-anchor="end">① register(Bob, 身份公钥)</text>
+
+<line x1="110" y1="170" x2="343" y2="170" stroke="#475569" stroke-width="2" marker-end="url(#a2)"/>
+<text x="115" y="164" font-size="11" fill="#334155">② lookup(Bob)</text>
+<line x1="345" y1="193" x2="112" y2="193" stroke="#475569" stroke-width="2" marker-end="url(#a2)"/>
+<text x="340" y="187" font-size="11" fill="#334155" text-anchor="end">② Bob 的身份公钥</text>
+
+<rect x="40" y="210" width="200" height="40" rx="5" fill="#f1f5f9" stroke="#64748b" stroke-width="1"/>
+<text x="50" y="227" font-size="10.5" fill="#334155">生成临时 X25519 密钥对，</text>
+<text x="50" y="242" font-size="10.5" fill="#334155">用身份私钥签名 transcript</text>
+
+<line x1="110" y1="272" x2="578" y2="272" stroke="#2563eb" stroke-width="2.5" marker-end="url(#a2)"/>
+<text x="344" y="266" font-size="11.5" font-weight="700" fill="#1e3a5f" text-anchor="middle">③ hs_init { 临时公钥, 签名 }  (经服务器转发)</text>
+
+<rect x="450" y="288" width="200" height="54" rx="5" fill="#ecfdf5" stroke="#059669" stroke-width="1"/>
+<text x="460" y="305" font-size="10.5" fill="#334155">验证 Alice 签名(失败即拒)</text>
+<text x="460" y="320" font-size="10.5" fill="#334155">生成临时密钥对并签名，</text>
+<text x="460" y="335" font-size="10.5" fill="#334155">派生方向密钥 → 会话建立</text>
+
+<line x1="580" y1="364" x2="112" y2="364" stroke="#2563eb" stroke-width="2.5" marker-end="url(#a2)"/>
+<text x="344" y="358" font-size="11.5" font-weight="700" fill="#1e3a5f" text-anchor="middle">④ hs_resp { 临时公钥, 签名(含A临时公钥) }</text>
+
+<rect x="40" y="380" width="210" height="54" rx="5" fill="#ecfdf5" stroke="#059669" stroke-width="1"/>
+<text x="50" y="397" font-size="10.5" fill="#334155">验证 Bob 签名(绑定本次握手)，</text>
+<text x="50" y="412" font-size="10.5" fill="#334155">计算共享秘密 → HKDF 派生，</text>
+<text x="50" y="427" font-size="10.5" fill="#334155">双方持有一致的方向密钥</text>
+
+<line x1="110" y1="462" x2="578" y2="462" stroke="#059669" stroke-width="2.5" marker-end="url(#a3)"/>
+<text x="344" y="456" font-size="11.5" font-weight="700" fill="#065f46" text-anchor="middle">⑤ data: AEAD 密文 (AD=from‖to‖sid‖counter)</text>
+<line x1="580" y1="492" x2="112" y2="492" stroke="#059669" stroke-width="2.5" marker-end="url(#a3)"/>
+<text x="344" y="486" font-size="11.5" font-weight="700" fill="#065f46" text-anchor="middle">⑤ data: AEAD 密文 (反方向，独立密钥)</text>
+
+<text x="40" y="520" font-size="11" fill="#64748b">蓝=握手(经服务器转发) · 绿=已加密应用消息 · 临时密钥用后即弃 → 前向保密(B1)</text>
+</svg>

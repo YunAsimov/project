@@ -1,0 +1,19 @@
+# Never commit secrets / key material (graded requirement)
+*.key
+*.pem
+keystore/
+*.db
+*.sqlite3
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store

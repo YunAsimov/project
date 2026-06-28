@@ -1,0 +1,42 @@
+<svg width="100%" viewBox="0 0 680 380" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Microsoft YaHei, sans-serif">
+<title>系统架构与信任边界</title>
+<desc>三个实体：客户端A、中继服务器、客户端B。端点可信，服务器弱信任只见密文与元数据，网络完全不可信。</desc>
+
+<text x="40" y="34" font-size="18" font-weight="700" fill="#1e293b">系统架构与信任边界</text>
+
+<rect x="40" y="70" width="170" height="110" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+<text x="125" y="100" font-size="15" font-weight="700" fill="#1e3a5f" text-anchor="middle">客户端 A (Alice)</text>
+<text x="125" y="124" font-size="12" fill="#334155" text-anchor="middle">生成密钥 / 加解密</text>
+<text x="125" y="143" font-size="12" fill="#334155" text-anchor="middle">持有私钥与明文</text>
+<text x="125" y="166" font-size="11" font-weight="700" fill="#059669" text-anchor="middle">信任端点 ✓</text>
+
+<rect x="255" y="70" width="170" height="110" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+<text x="340" y="100" font-size="15" font-weight="700" fill="#78350f" text-anchor="middle">中继服务器</text>
+<text x="340" y="124" font-size="12" fill="#334155" text-anchor="middle">注册 / 公钥分发</text>
+<text x="340" y="143" font-size="12" fill="#334155" text-anchor="middle">按路由转发密文</text>
+<text x="340" y="166" font-size="11" font-weight="700" fill="#d97706" text-anchor="middle">弱信任 (honest-but-curious)</text>
+
+<rect x="470" y="70" width="170" height="110" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+<text x="555" y="100" font-size="15" font-weight="700" fill="#1e3a5f" text-anchor="middle">客户端 B (Bob)</text>
+<text x="555" y="124" font-size="12" fill="#334155" text-anchor="middle">生成密钥 / 加解密</text>
+<text x="555" y="143" font-size="12" fill="#334155" text-anchor="middle">持有私钥与明文</text>
+<text x="555" y="166" font-size="11" font-weight="700" fill="#059669" text-anchor="middle">信任端点 ✓</text>
+
+<defs>
+<marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#475569"/></marker>
+</defs>
+<line x1="210" y1="115" x2="252" y2="115" stroke="#475569" stroke-width="2" marker-end="url(#ar)"/>
+<line x1="425" y1="115" x2="252" y2="115" stroke="#475569" stroke-width="2" marker-end="url(#ar)"/>
+<line x1="425" y1="135" x2="467" y2="135" stroke="#475569" stroke-width="2" marker-end="url(#ar)"/>
+<line x1="470" y1="155" x2="427" y2="155" stroke="#475569" stroke-width="2" marker-end="url(#ar)"/>
+
+<rect x="40" y="215" width="600" height="58" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="2" stroke-dasharray="6 4"/>
+<text x="340" y="240" font-size="13" font-weight="700" fill="#7f1d1d" text-anchor="middle">网络链路：对手完全控制</text>
+<text x="340" y="260" font-size="12" fill="#334155" text-anchor="middle">A1 被动监听 · A2 主动篡改/重放/中间人 —— 不提供任何机密性、完整性、真实性</text>
+
+<text x="40" y="305" font-size="12" font-weight="700" fill="#1e293b">服务器可见：</text>
+<text x="135" y="305" font-size="12" fill="#334155">密文 + 路由元数据(from / to / counter)</text>
+<text x="40" y="326" font-size="12" font-weight="700" fill="#1e293b">服务器不可见：</text>
+<text x="135" y="326" font-size="12" fill="#334155">明文、会话密钥、临时私钥 → 满足 SR1 / A3</text>
+<text x="40" y="352" font-size="11" fill="#64748b">图例：蓝=可信端点，黄=弱信任服务器，红虚线=不可信网络</text>
+</svg>

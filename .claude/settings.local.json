@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c ' *)",
+      "Bash(python -c \"import cryptography; print\\('cryptography', cryptography.__version__\\)\")",
+      "Bash(pip show *)",
+      "Bash(python demo/run_demo.py)"
+    ]
+  }
+}
