@@ -11,6 +11,12 @@ client_store/
 .playwright-mcp/
 *.png
 
+# Node (report generation tooling)
+node_modules/
+
+# Generated PDFs from docx
+report/*.pdf
+
 # Python
 __pycache__/
 *.py[cod]

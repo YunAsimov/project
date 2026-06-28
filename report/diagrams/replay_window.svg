@@ -1,0 +1,56 @@
+<svg width="100%" viewBox="0 0 680 400" role="img" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Microsoft YaHei, sans-serif">
+<title>防重放滑动窗口</title>
+<desc>接收方维护最高已见计数器和一个滑动位图窗口;按计数器与窗口的关系接受或拒绝消息。</desc>
+
+<text x="40" y="32" font-size="18" font-weight="700" fill="#1e293b">防重放滑动窗口(RFC 6479 风格)</text>
+<text x="40" y="56" font-size="12" fill="#64748b">演示窗口大小=8(实现为 64)。绿=已见,白=未见;最高已见计数器 = 25。</text>
+
+<defs>
+<marker id="rg" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#059669"/></marker>
+<marker id="rr" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#dc2626"/></marker>
+</defs>
+
+<!-- counter slots 18..25 -->
+<g>
+<rect x="60" y="78" width="64" height="44" rx="5" fill="#ecfdf5" stroke="#059669" stroke-width="1.5"/>
+<rect x="129" y="78" width="64" height="44" rx="5" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+<rect x="198" y="78" width="64" height="44" rx="5" fill="#ecfdf5" stroke="#059669" stroke-width="1.5"/>
+<rect x="267" y="78" width="64" height="44" rx="5" fill="#ecfdf5" stroke="#059669" stroke-width="1.5"/>
+<rect x="336" y="78" width="64" height="44" rx="5" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+<rect x="405" y="78" width="64" height="44" rx="5" fill="#ecfdf5" stroke="#059669" stroke-width="1.5"/>
+<rect x="474" y="78" width="64" height="44" rx="5" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+<rect x="543" y="78" width="64" height="44" rx="5" fill="#d1fae5" stroke="#059669" stroke-width="2.5"/>
+</g>
+<g font-size="13" fill="#334155" text-anchor="middle">
+<text x="92" y="105">18</text><text x="161" y="105">19</text><text x="230" y="105">20</text>
+<text x="299" y="105">21</text><text x="368" y="105">22</text><text x="437" y="105">23</text>
+<text x="506" y="105">24</text><text x="575" y="105" font-weight="700">25</text>
+</g>
+<text x="575" y="140" font-size="11" fill="#065f46" text-anchor="middle" font-weight="700">最高已见</text>
+<text x="60" y="140" font-size="11" fill="#64748b">← 更旧</text>
+<path d="M55 150 L612 150" stroke="#cbd5e1" stroke-width="1"/>
+<text x="334" y="166" font-size="11" fill="#94a3b8" text-anchor="middle">窗口范围(最高已见的最近 8 个计数器)</text>
+
+<!-- decisions -->
+<g font-size="12.5">
+<line x1="60" y1="200" x2="120" y2="200" stroke="#059669" stroke-width="2" marker-end="url(#rg)"/>
+<text x="128" y="204" fill="#065f46" font-weight="700">计数器 = 26(&gt; 最高)</text>
+<text x="320" y="204" fill="#334155">→ 接受,窗口前移,最高更新为 26</text>
+
+<line x1="60" y1="232" x2="120" y2="232" stroke="#059669" stroke-width="2" marker-end="url(#rg)"/>
+<text x="128" y="236" fill="#065f46" font-weight="700">计数器 = 22(窗口内,未见)</text>
+<text x="320" y="236" fill="#334155">→ 接受,并在位图中标记为已见</text>
+
+<line x1="60" y1="264" x2="120" y2="264" stroke="#dc2626" stroke-width="2" marker-end="url(#rr)"/>
+<text x="128" y="268" fill="#7f1d1d" font-weight="700">计数器 = 23(窗口内,已见)</text>
+<text x="320" y="268" fill="#334155">→ 拒绝(重放)</text>
+
+<line x1="60" y1="296" x2="120" y2="296" stroke="#dc2626" stroke-width="2" marker-end="url(#rr)"/>
+<text x="128" y="300" fill="#7f1d1d" font-weight="700">计数器 = 10(窗口外,过旧)</text>
+<text x="320" y="300" fill="#334155">→ 拒绝(越窗)</text>
+</g>
+
+<rect x="40" y="330" width="600" height="48" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+<text x="52" y="351" font-size="12" fill="#78350f" font-weight="700">关键顺序:先验 AEAD 标签,后更新窗口。</text>
+<text x="52" y="369" font-size="11.5" fill="#334155">伪造的高计数器帧在标签校验阶段即被拒,无法污染窗口、使后续合法消息被误拒。</text>
+</svg>
